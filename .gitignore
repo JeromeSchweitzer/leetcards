@@ -1,0 +1,21 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Pipeline: ignore the transient HTTP cache and local-only scratch, but TRACK
+# the authored core_ideas.json + the dataset.json/solutions_raw.json data.
+pipeline/cache/
+pipeline/out/*.log
+pipeline/out/authoring_ref.txt
+pipeline/out/idea_prompts.md
+
+# macOS
+.DS_Store
+
+# Xcode — project is generated from project.yml via XcodeGen, so the
+# .xcodeproj itself is a build artifact and is not tracked.
+*.xcodeproj/
+.build/
+DerivedData/
+xcuserdata/
