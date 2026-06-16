@@ -17,5 +17,6 @@ pipeline/out/idea_prompts.md
 # .xcodeproj itself is a build artifact and is not tracked.
 *.xcodeproj/
 .build/
+.swiftpm/
 DerivedData/
 xcuserdata/

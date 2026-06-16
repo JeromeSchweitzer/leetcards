@@ -1,0 +1,40 @@
+name: LeetCards
+options:
+  bundleIdPrefix: com.jeromeschweitzer.leetcards
+  deploymentTarget:
+    macOS: "26.0"
+    iOS: "26.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    GENERATE_INFOPLIST_FILE: YES
+    MARKETING_VERSION: "0.1"
+    CURRENT_PROJECT_VERSION: "1"
+    # No signing team set yet — required only to run on a physical iPhone.
+    # Set DEVELOPMENT_TEAM here (or in Xcode) when deploying to device.
+
+targets:
+  LeetCards:
+    type: application
+    supportedDestinations: [macOS, iOS]
+    sources:
+      - path: App
+    settings:
+      base:
+        INFOPLIST_KEY_CFBundleDisplayName: LeetCards
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.education
+
+  LeetCardsTests:
+    type: bundle.unit-test
+    supportedDestinations: [macOS, iOS]
+    sources:
+      - path: Tests
+    dependencies:
+      - target: LeetCards
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
