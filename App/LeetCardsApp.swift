@@ -74,6 +74,9 @@ struct RootView: View {
 
     @Environment(\.modelContext) private var modelContext
     @State private var store: DeckStore?
+    @AppStorage("theme") private var themeRaw = AppTheme.dark.rawValue
+
+    private var theme: AppTheme { AppTheme(rawValue: themeRaw) ?? .dark }
 
     var body: some View {
         Group {
@@ -89,13 +92,23 @@ struct RootView: View {
                 ProgressView("Loading…")
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(theme.palette.backgroundGradient.ignoresSafeArea())
+        .environment(\.palette, theme.palette)
+        .tint(theme.palette.accent)
+        .preferredColorScheme(.dark)
         .task {
             guard store == nil, loadError == nil else { return }
-            store = DeckStore(
+            let newStore = DeckStore(
                 problems: problems,
                 context: modelContext,
                 grader: GraderFactory.makeGrader()
             )
+            // Seed the curated deck with all problems on first run.
+            newStore.seedDeckIfNeeded(seeded: seededFlag) { seededFlag = true }
+            store = newStore
         }
     }
+
+    @AppStorage("deckSeeded") private var seededFlag = false
 }

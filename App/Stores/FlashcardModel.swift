@@ -37,6 +37,11 @@ final class FlashcardModel {
     /// The answer box is only editable before grading begins.
     var isAnswerEditable: Bool { phase == .answering }
 
+    /// True while showing a grade (the deck disables nav; Save advances).
+    var isReviewing: Bool {
+        if case .graded = phase { true } else { false }
+    }
+
     /// Grading is allowed only when there's a non-blank answer.
     var canGrade: Bool {
         phase == .answering && !answer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty

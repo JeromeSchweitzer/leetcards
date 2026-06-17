@@ -8,6 +8,8 @@ struct GradeResultView: View {
     /// The user's possibly-overridden final score (bound by the parent).
     @Binding var finalScore: Int
 
+    @Environment(\.palette) private var palette
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             scoreHeader
@@ -39,15 +41,17 @@ struct GradeResultView: View {
                 Text("\(finalScore)")
                     .font(.system(size: 44, weight: .bold, design: .rounded))
                     .foregroundStyle(verdictColor)
+                    .contentTransition(.numericText(value: Double(finalScore)))
                 Text("/ 100").foregroundStyle(.secondary)
                 Spacer()
                 Text(finalScore >= Grade.passThreshold ? "Pass" : "Review")
                     .font(.subheadline.weight(.semibold))
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
-                    .background(verdictColor.opacity(0.15), in: Capsule())
+                    .background(verdictColor.opacity(0.18), in: Capsule())
                     .foregroundStyle(verdictColor)
             }
+            .animation(.snappy, value: finalScore)
 
             HStack(spacing: 8) {
                 Text("Override")
@@ -72,7 +76,9 @@ struct GradeResultView: View {
         }
     }
 
+    /// Continuous red→amber→green spectrum, so the color shifts smoothly as the
+    /// override slider moves.
     private var verdictColor: Color {
-        finalScore >= Grade.passThreshold ? .green : .orange
+        palette.scoreColor(finalScore)
     }
 }

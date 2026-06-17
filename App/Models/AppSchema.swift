@@ -3,28 +3,36 @@ import SwiftData
 
 /// Versioned SwiftData schema + migration plan.
 ///
-/// Today there is a single version, but routing the `ModelContainer` through a
-/// `SchemaMigrationPlan` now means future changes to `Attempt` (e.g. adding
-/// spaced-repetition scheduling fields) can ship a lightweight or custom
-/// migration stage without wiping the user's history.
+/// V1 had only `Attempt`. V2 adds `DeckEntry` (curated deck membership) — an
+/// additive change, so the migration is lightweight and the user's `Attempt`
+/// history is preserved.
 enum AppSchemaV1: VersionedSchema {
     static var versionIdentifier: Schema.Version { Schema.Version(1, 0, 0) }
     static var models: [any PersistentModel.Type] { [Attempt.self] }
 }
 
-enum AppMigrationPlan: SchemaMigrationPlan {
-    static var schemas: [any VersionedSchema.Type] { [AppSchemaV1.self] }
+enum AppSchemaV2: VersionedSchema {
+    static var versionIdentifier: Schema.Version { Schema.Version(2, 0, 0) }
+    static var models: [any PersistentModel.Type] { [Attempt.self, DeckEntry.self] }
+}
 
-    /// No migrations yet — add `MigrationStage`s here when a V2 schema lands.
-    static var stages: [MigrationStage] { [] }
+enum AppMigrationPlan: SchemaMigrationPlan {
+    static var schemas: [any VersionedSchema.Type] { [AppSchemaV1.self, AppSchemaV2.self] }
+
+    static var stages: [MigrationStage] {
+        [.lightweight(fromVersion: AppSchemaV1.self, toVersion: AppSchemaV2.self)]
+    }
 }
 
 enum PersistenceStore {
+    /// The model types in the current schema.
+    static let models: [any PersistentModel.Type] = [Attempt.self, DeckEntry.self]
+
     /// The on-disk container the app uses.
     @MainActor
     static func makeContainer() throws -> ModelContainer {
         try ModelContainer(
-            for: Attempt.self,
+            for: Schema(models),
             migrationPlan: AppMigrationPlan.self
         )
     }
@@ -33,7 +41,7 @@ enum PersistenceStore {
     @MainActor
     static func makeInMemoryContainer() throws -> ModelContainer {
         try ModelContainer(
-            for: Attempt.self,
+            for: Schema(models),
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
     }

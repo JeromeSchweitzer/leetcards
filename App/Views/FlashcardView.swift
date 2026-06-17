@@ -9,14 +9,9 @@ import SwiftUI
 struct FlashcardView: View {
     let problem: Problem
     let store: DeckStore
-
-    @State private var model: FlashcardModel
-
-    init(problem: Problem, store: DeckStore) {
-        self.problem = problem
-        self.store = store
-        _model = State(initialValue: store.makeFlashcardModel(for: problem))
-    }
+    /// The card's model is owned by the store (so the deck can observe its
+    /// review state); this view just drives it.
+    @Bindable var model: FlashcardModel
 
     var body: some View {
         ScrollView {
@@ -103,9 +98,13 @@ struct FlashcardView: View {
                 GradeResultView(problem: problem, grade: grade, finalScore: $model.finalScore)
                 Button {
                     model.commit()
-                    store.goNext()
+                    if store.hasNext {
+                        store.goNext()
+                    } else {
+                        store.finishDeck()
+                    }
                 } label: {
-                    Label(store.hasNext ? "Save & Next" : "Save & Finish", systemImage: "arrow.right")
+                    Label(store.hasNext ? "Save & Next" : "Save & Finish", systemImage: store.hasNext ? "arrow.right" : "flag.checkered")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
@@ -116,21 +115,15 @@ struct FlashcardView: View {
 
 struct DifficultyBadge: View {
     let difficulty: Difficulty
+    @Environment(\.palette) private var palette
 
     var body: some View {
+        let color = palette.difficultyColor(difficulty)
         Text(difficulty.rawValue)
             .font(.caption.weight(.semibold))
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
-            .background(color.opacity(0.15), in: Capsule())
+            .background(color.opacity(0.18), in: Capsule())
             .foregroundStyle(color)
-    }
-
-    private var color: Color {
-        switch difficulty {
-        case .easy: .green
-        case .medium: .orange
-        case .hard: .red
-        }
     }
 }

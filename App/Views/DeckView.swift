@@ -1,17 +1,23 @@
 import SwiftUI
 
-/// The root deck screen: progress, order/queue controls, the current flashcard,
-/// and previous/next navigation.
+/// The root deck screen: the current flashcard, previous/next navigation, a
+/// progress pill, the deck menu, and a button into the Problems browser.
 struct DeckView: View {
     @Bindable var store: DeckStore
     /// Non-nil when on-device grading is unavailable (using the manual/mock path).
     let graderNotice: String?
 
+    @Environment(\.palette) private var palette
+    @AppStorage("theme") private var themeRaw = AppTheme.dark.rawValue
+    @State private var showingProblems = false
+
     var body: some View {
         NavigationStack {
             Group {
-                if let problem = store.current {
-                    FlashcardView(problem: problem, store: store)
+                if store.isFinished {
+                    DeckSummaryView(store: store) { showingProblems = true }
+                } else if let problem = store.current, let card = store.currentCard {
+                    FlashcardView(problem: problem, store: store, model: card)
                         .id(problem.id)
                 } else {
                     emptyState
@@ -31,17 +37,19 @@ struct DeckView: View {
             }
             .navigationTitle("LeetCards")
             .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("\(store.progressText)  ·  \(store.solvedCount) passed")
-                        .font(.callout)
-                        .foregroundStyle(.secondary)
-                        .padding(.horizontal, Layout.pillHPadding)
-                        .padding(.vertical, Layout.pillVPadding)
-                        .background(.quaternary, in: Capsule())
+                ToolbarItem {
+                    Button {
+                        showingProblems = true
+                    } label: {
+                        Label("Problems", systemImage: "list.bullet.rectangle")
+                    }
                 }
                 ToolbarItem {
                     deckMenu
                 }
+            }
+            .navigationDestination(isPresented: $showingProblems) {
+                ProblemListView(store: store)
             }
         }
     }
@@ -64,12 +72,21 @@ struct DeckView: View {
                 Button {
                     store.query.filter = .all
                 } label: {
-                    Label("All problems", systemImage: "square.stack")
+                    Label("All in deck", systemImage: "square.stack")
                 }
                 Button {
                     store.query.filter = .failedOrDue
                 } label: {
                     Label("Review failed", systemImage: "exclamationmark.arrow.circlepath")
+                }
+            }
+            Section("Theme") {
+                ForEach(AppTheme.allCases) { theme in
+                    Button {
+                        themeRaw = theme.rawValue
+                    } label: {
+                        Label(theme.displayName, systemImage: theme.symbol)
+                    }
                 }
             }
         } label: {
@@ -84,7 +101,17 @@ struct DeckView: View {
             } label: {
                 Label("Previous", systemImage: "chevron.left")
             }
-            .disabled(!store.hasPrevious)
+            .disabled(!store.hasPrevious || store.isReviewing)
+
+            Spacer()
+
+            // Progress pill (single, fully-controlled — no toolbar double border).
+            Text("\(store.progressText)  ·  \(store.solvedCount) passed")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, Layout.pillHPadding)
+                .padding(.vertical, Layout.pillVPadding)
+                .background(palette.pill, in: Capsule())
 
             Spacer()
 
@@ -93,7 +120,7 @@ struct DeckView: View {
             } label: {
                 Label("Next", systemImage: "chevron.right")
             }
-            .disabled(!store.hasNext)
+            .disabled(!store.hasNext || store.isReviewing)
         }
         .padding(.horizontal, Layout.navBarHPadding)
         .padding(.vertical, Layout.navBarVPadding)
@@ -102,11 +129,14 @@ struct DeckView: View {
 
     private var emptyState: some View {
         ContentUnavailableView {
-            Label("Nothing to review", systemImage: "checkmark.circle")
+            Label("Your deck is empty", systemImage: "tray")
         } description: {
             Text(store.query.filter == .failedOrDue
-                 ? "No failed cards — switch to All problems from the deck menu."
-                 : "The deck is empty.")
+                 ? "No failed cards — switch to All in deck from the deck menu."
+                 : "Add problems from the Problems list to start studying.")
+        } actions: {
+            Button("Browse Problems") { showingProblems = true }
+                .buttonStyle(.borderedProminent)
         }
     }
 }
