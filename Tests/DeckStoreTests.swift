@@ -99,4 +99,55 @@ struct DeckStoreTests {
         #expect(saved.finalScore == 80)
         #expect(store.solvedCount == 1)   // 80 >= threshold
     }
+
+    @Test("Navigation clamps at both ends")
+    func navigationBounds() throws {
+        let store = try makeStore(problems: sampleProblems(3), query: DeckQuery(order: .sequential))
+        #expect(!store.hasPrevious)
+        #expect(store.hasNext)
+        store.goPrevious()                 // no-op at the start
+        #expect(store.index == 0)
+        store.goNext(); store.goNext()
+        #expect(store.index == 2)
+        #expect(store.hasPrevious)
+        #expect(!store.hasNext)
+        store.goNext()                     // no-op at the end
+        #expect(store.index == 2)
+    }
+
+    @Test("Changing the query rebuilds the deck and resets the index to 0")
+    func queryChangeResetsIndex() throws {
+        let store = try makeStore(problems: sampleProblems(5), query: DeckQuery(order: .sequential))
+        store.goNext(); store.goNext()
+        #expect(store.index == 2)
+        store.query = DeckQuery(order: .shuffled(seed: 1))
+        #expect(store.index == 0)
+        #expect(Set(store.deck.map(\.id)).count == 5)   // still the full set
+    }
+
+    @Test("Empty failed/due queue leaves no current card")
+    func emptyFailedQueue() throws {
+        let store = try makeStore(problems: sampleProblems(3), query: DeckQuery(order: .sequential))
+        store.query = DeckQuery(order: .sequential, filter: .failedOrDue)
+        #expect(store.deck.isEmpty)
+        #expect(store.current == nil)      // drives the empty-state view
+    }
+
+    @Test("Attempt history persists across a store re-init on the same container")
+    func historyPersistsAcrossReinit() throws {
+        let container = try PersistenceStore.makeInMemoryContainer()
+        let problems = sampleProblems(3)
+
+        let first = DeckStore(problems: problems, context: ModelContext(container),
+                              grader: MockGrader(), query: DeckQuery(order: .sequential))
+        first.index = 1
+        first.record(answer: "x", llmScore: 88, finalScore: 88, rationale: "")
+
+        // A fresh store over the same container should see the saved attempt.
+        let second = DeckStore(problems: problems, context: ModelContext(container),
+                               grader: MockGrader(), query: DeckQuery(order: .sequential))
+        let saved = try #require(second.latestAttempt(for: "p1"))
+        #expect(saved.finalScore == 88)
+        #expect(second.solvedCount == 1)
+    }
 }

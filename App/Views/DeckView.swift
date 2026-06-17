@@ -35,6 +35,9 @@ struct DeckView: View {
                     Text("\(store.progressText)  ·  \(store.solvedCount) passed")
                         .font(.callout)
                         .foregroundStyle(.secondary)
+                        .padding(.horizontal, Layout.pillHPadding)
+                        .padding(.vertical, Layout.pillVPadding)
+                        .background(.quaternary, in: Capsule())
                 }
                 ToolbarItem {
                     deckMenu
@@ -92,8 +95,8 @@ struct DeckView: View {
             }
             .disabled(!store.hasNext)
         }
-        .padding(.horizontal)
-        .padding(.vertical, 8)
+        .padding(.horizontal, Layout.navBarHPadding)
+        .padding(.vertical, Layout.navBarVPadding)
         .background(.bar)
     }
 

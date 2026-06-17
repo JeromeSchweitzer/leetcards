@@ -1,0 +1,14 @@
+#!/bin/sh
+# Pre-commit hook: build + run the regression test suite, block the commit on
+# failure. Enable once per clone with:  git config core.hooksPath .githooks
+#
+# Skip in a pinch with:  git commit --no-verify
+set -e
+
+echo "[pre-commit] swift build…"
+swift build
+
+echo "[pre-commit] swift test…"
+swift test
+
+echo "[pre-commit] OK"

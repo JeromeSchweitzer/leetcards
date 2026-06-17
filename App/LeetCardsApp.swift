@@ -7,6 +7,13 @@ struct LeetCardsApp: App {
     private let problems: [Problem]
     private let loadError: String?
 
+    #if os(macOS)
+    // Ensures the app activates and its window becomes key — needed when run as
+    // a bare executable via `swift run` (no .app bundle), otherwise the window
+    // never takes keyboard focus and text fields can't be typed into.
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    #endif
+
     init() {
         // Load the bundled dataset (forward-compatible decoding).
         do {
@@ -41,6 +48,23 @@ struct LeetCardsApp: App {
         try PersistenceStore.makeInMemoryContainer()
     }
 }
+
+#if os(macOS)
+import AppKit
+
+/// Activates the app on launch so its window becomes key and accepts keyboard
+/// input — required when launched via `swift run` (no .app bundle).
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        NSApp.setActivationPolicy(.regular)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        true
+    }
+}
+#endif
 
 /// Builds the `DeckStore` once the SwiftData context is available, and routes to
 /// the deck, a load-error state, or a brief loading state.

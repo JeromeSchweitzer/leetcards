@@ -3,22 +3,20 @@ import SwiftUI
 /// A single flashcard: shows the problem, takes the user's core-idea answer,
 /// grades it, then shows the result with an editable score override.
 ///
-/// State is intentionally per-problem; the parent keys this view by problem id
-/// so moving to another card starts fresh.
+/// The grade flow lives in `FlashcardModel` (testable); this view is a thin
+/// shell over it. The parent keys this view by problem id so moving to another
+/// card starts fresh.
 struct FlashcardView: View {
     let problem: Problem
     let store: DeckStore
 
-    private enum Phase: Equatable {
-        case answering
-        case grading
-        case graded(Grade)
-    }
+    @State private var model: FlashcardModel
 
-    @State private var answer: String = ""
-    @State private var phase: Phase = .answering
-    @State private var finalScore: Int = 0
-    @State private var errorMessage: String?
+    init(problem: Problem, store: DeckStore) {
+        self.problem = problem
+        self.store = store
+        _model = State(initialValue: store.makeFlashcardModel(for: problem))
+    }
 
     var body: some View {
         ScrollView {
@@ -28,15 +26,15 @@ struct FlashcardView: View {
 
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Your core idea").font(.headline)
-                    TextEditor(text: $answer)
+                    TextEditor(text: $model.answer)
                         .font(.body)
                         .frame(minHeight: 120)
                         .padding(6)
                         .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 8))
-                        .disabled(phase != .answering)
+                        .disabled(!model.isAnswerEditable)
                 }
 
-                if let errorMessage {
+                if let errorMessage = model.errorMessage {
                     Label(errorMessage, systemImage: "exclamationmark.triangle")
                         .font(.callout)
                         .foregroundStyle(.orange)
@@ -73,9 +71,8 @@ struct FlashcardView: View {
     }
 
     private var description: some View {
-        Text(problem.description)
+        MarkdownView(text: problem.description)
             .font(.callout)
-            .textSelection(.enabled)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(12)
             .background(.quaternary.opacity(0.25), in: RoundedRectangle(cornerRadius: 8))
@@ -83,16 +80,16 @@ struct FlashcardView: View {
 
     @ViewBuilder
     private var actionArea: some View {
-        switch phase {
+        switch model.phase {
         case .answering:
             Button {
-                gradeAnswer()
+                Task { await model.grade() }
             } label: {
                 Label("Grade", systemImage: "checkmark.seal")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
-            .disabled(answer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            .disabled(!model.canGrade)
 
         case .grading:
             HStack {
@@ -103,9 +100,10 @@ struct FlashcardView: View {
 
         case .graded(let grade):
             VStack(alignment: .leading, spacing: 16) {
-                GradeResultView(problem: problem, grade: grade, finalScore: $finalScore)
+                GradeResultView(problem: problem, grade: grade, finalScore: $model.finalScore)
                 Button {
-                    saveAndContinue(grade: grade)
+                    model.commit()
+                    store.goNext()
                 } label: {
                     Label(store.hasNext ? "Save & Next" : "Save & Finish", systemImage: "arrow.right")
                         .frame(maxWidth: .infinity)
@@ -113,33 +111,6 @@ struct FlashcardView: View {
                 .buttonStyle(.borderedProminent)
             }
         }
-    }
-
-    // MARK: - Actions
-
-    private func gradeAnswer() {
-        errorMessage = nil
-        phase = .grading
-        Task {
-            do {
-                let grade = try await store.grade(answer: answer)
-                finalScore = grade.score
-                phase = .graded(grade)
-            } catch {
-                errorMessage = error.localizedDescription
-                phase = .answering
-            }
-        }
-    }
-
-    private func saveAndContinue(grade: Grade) {
-        store.record(
-            answer: answer,
-            llmScore: grade.score,
-            finalScore: finalScore,
-            rationale: grade.rationale
-        )
-        store.goNext()
     }
 }
 

@@ -127,8 +127,14 @@ final class DeckStore {
     @discardableResult
     func record(answer: String, llmScore: Int, finalScore: Int, rationale: String) -> Attempt? {
         guard let problem = current else { return nil }
+        return record(problemID: problem.id, answer: answer, llmScore: llmScore, finalScore: finalScore, rationale: rationale)
+    }
+
+    /// Persist a result for a specific problem id.
+    @discardableResult
+    func record(problemID: String, answer: String, llmScore: Int, finalScore: Int, rationale: String) -> Attempt {
         let attempt = Attempt(
-            problemID: problem.id,
+            problemID: problemID,
             userAnswer: answer,
             llmScore: llmScore,
             finalScore: finalScore,
@@ -137,5 +143,18 @@ final class DeckStore {
         context.insert(attempt)
         try? context.save()
         return attempt
+    }
+
+    /// Build the testable per-card model wired to this store's grader + storage.
+    func makeFlashcardModel(for problem: Problem) -> FlashcardModel {
+        FlashcardModel(coreIdea: problem.coreIdea, grader: grader) { [weak self] answer, llmScore, finalScore, rationale in
+            self?.record(
+                problemID: problem.id,
+                answer: answer,
+                llmScore: llmScore,
+                finalScore: finalScore,
+                rationale: rationale
+            )
+        }
     }
 }

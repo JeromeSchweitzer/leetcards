@@ -75,6 +75,23 @@ struct DatasetLoaderTests {
         #expect(dataset.problems.first?.difficulty == nil)
     }
 
+    @Test("Invalid JSON surfaces a DatasetError instead of crashing")
+    func invalidJSONThrows() {
+        let provider = InlineProvider(json: "{ not valid json ]")
+        #expect(throws: DatasetError.self) {
+            try DatasetLoader(provider: provider).load()
+        }
+    }
+
+    @Test("A missing bundle resource surfaces a DatasetError")
+    func missingResourceThrows() {
+        // A bundle that definitely has no dataset.json resource.
+        let provider = BundledDatasetSource(resourceName: "does-not-exist", bundle: .main)
+        #expect(throws: DatasetError.self) {
+            try DatasetLoader(provider: provider).load()
+        }
+    }
+
     @Test("The bundled dataset.json loads and is non-trivial")
     func bundledDatasetLoads() throws {
         // Skips gracefully if the resource isn't reachable in this build context.
