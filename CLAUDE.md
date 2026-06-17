@@ -36,10 +36,12 @@ SDK). SwiftPM builds the **macOS** target only; use Xcode for iOS/Simulator.
 
 ## Layout
 
-- `pipeline/` — Python data pipeline that builds the bundled `dataset.json`.
 - `App/` — SwiftUI app (macOS + iOS): `Models/`, `Services/` (dataset + grading),
   `Stores/` (`DeckStore`, `FlashcardModel`), `Views/`, `Theme/`.
 - `Tests/` — swift-testing regression suites.
+- The app ships `App/Resources/dataset.sample.json`; a full `dataset.json` (if
+  present in `App/Resources/`) is gitignored and preferred by the loader. The
+  data pipeline that builds it is local-only and not part of this repo.
 
 ## Conventions
 

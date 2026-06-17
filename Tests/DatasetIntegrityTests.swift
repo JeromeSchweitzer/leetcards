@@ -2,22 +2,24 @@ import Foundation
 import Testing
 @testable import LeetCards
 
-/// Guards the shape/quality of the bundled dataset so a bad pipeline run or an
-/// accidental edit to dataset.json fails fast.
+/// Guards the shape/quality of whatever dataset is bundled — the full local
+/// dataset.json when present, otherwise the committed dataset.sample.json — so a
+/// bad/edited dataset fails fast. (The size isn't asserted, since the public
+/// repo ships only the small sample.)
 @Suite("Bundled dataset integrity")
 struct DatasetIntegrityTests {
 
     private func loadBundled() throws -> Dataset? {
-        guard Bundle.datasetBundle.url(forResource: "dataset", withExtension: "json") != nil else {
-            return nil  // resource not reachable in this build context — skip
-        }
+        let reachable = Bundle.datasetBundle.url(forResource: "dataset", withExtension: "json") != nil
+            || Bundle.datasetBundle.url(forResource: "dataset.sample", withExtension: "json") != nil
+        guard reachable else { return nil }  // not reachable in this build context — skip
         return try DatasetLoader().load()
     }
 
-    @Test("Has the full Top Interview 150")
+    @Test("Bundled dataset is non-empty")
     func count() throws {
         guard let dataset = try loadBundled() else { return }
-        #expect(dataset.problems.count == 150)
+        #expect(dataset.problems.count >= 1)
     }
 
     @Test("Every problem has the fields the UI relies on")

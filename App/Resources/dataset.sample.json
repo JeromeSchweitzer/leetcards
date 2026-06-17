@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "generated_at": "2026-01-01T00:00:00Z",
+  "source": "sample",
+  "problems": [
+    {
+      "id": "sum-a-list",
+      "number": 1,
+      "order": 0,
+      "title": "Sum a List",
+      "difficulty": "Easy",
+      "description": "Given a list of integers, return the sum of all of its elements.\n\n**Example:**\n\n```\nInput: [1, 2, 3, 4]\nOutput: 10\n```\n\n**Constraints:**\n\n- The list may be empty (the sum of an empty list is 0).",
+      "core_idea": "Keep a running total and add each element in a single pass. O(n) time, O(1) space.",
+      "tags": ["array", "iteration"],
+      "hints": ["Start the accumulator at 0 so an empty list returns 0."],
+      "solutions": [
+        {
+          "title": "One pass accumulator",
+          "language": "python",
+          "code": "def sum_list(nums):\n    total = 0\n    for n in nums:\n        total += n\n    return total"
+        }
+      ]
+    },
+    {
+      "id": "reverse-a-string",
+      "number": 2,
+      "order": 1,
+      "title": "Reverse a String",
+      "difficulty": "Easy",
+      "description": "Return a new string with the characters of the input string in reverse order.\n\n**Example:**\n\n```\nInput: \"flashcards\"\nOutput: \"sdrachsalf\"\n```",
+      "core_idea": "Walk the string from the end to the start (or swap characters with two pointers moving inward). O(n) time.",
+      "tags": ["string", "two-pointers"],
+      "hints": ["Two pointers from both ends swapping inward also works in place."],
+      "solutions": [
+        {
+          "title": "Two pointers",
+          "language": "python",
+          "code": "def reverse(s):\n    chars = list(s)\n    i, j = 0, len(chars) - 1\n    while i < j:\n        chars[i], chars[j] = chars[j], chars[i]\n        i += 1\n        j -= 1\n    return ''.join(chars)"
+        }
+      ]
+    },
+    {
+      "id": "fizzbuzz",
+      "number": 3,
+      "order": 2,
+      "title": "FizzBuzz",
+      "difficulty": "Easy",
+      "description": "For each number from 1 to n, output:\n\n- \"FizzBuzz\" if it is divisible by both 3 and 5,\n- \"Fizz\" if divisible by 3,\n- \"Buzz\" if divisible by 5,\n- otherwise the number itself.\n\n**Example (n = 5):**\n\n```\n1, 2, Fizz, 4, Buzz\n```",
+      "core_idea": "Check divisibility by 15 first (3 and 5), then 3, then 5, else the number. Building the string from 'Fizz'/'Buzz' parts avoids the nested checks. O(n) time.",
+      "tags": ["math", "simulation"],
+      "hints": ["Checking divisibility by 15 before 3 and 5 keeps the branches simple."],
+      "solutions": [
+        {
+          "title": "Build from parts",
+          "language": "python",
+          "code": "def fizzbuzz(n):\n    out = []\n    for i in range(1, n + 1):\n        s = ('Fizz' if i % 3 == 0 else '') + ('Buzz' if i % 5 == 0 else '')\n        out.append(s or str(i))\n    return out"
+        }
+      ]
+    }
+  ]
+}

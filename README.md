@@ -7,12 +7,17 @@ Tab between real community solutions while reviewing.
 
 ## Layout
 
-- `pipeline/` — Python data pipeline (Stage 1): scrapes descriptions + top-3
-  community solutions, summarizes a `core_idea` per problem, builds the bundled
-  `dataset.json`. See `pipeline/` scripts.
-- `App/` — SwiftUI app (Stage 2), macOS + iOS. Models, services (dataset
-  loading, grading), stores (`DeckStore`, `FlashcardModel`), and views.
+- `App/` — SwiftUI app, macOS + iOS. Models, services (dataset loading,
+  grading), stores (`DeckStore`, `FlashcardModel`), views, and theme.
 - `Tests/` — swift-testing regression suites.
+
+## Dataset
+
+The app ships a small, self-authored **`App/Resources/dataset.sample.json`** so it
+builds and runs out of the box. The loader prefers a full `dataset.json` when one
+is present in `App/Resources/` (gitignored), and otherwise falls back to the
+sample. Building a full problem set is done by a separate, unpublished pipeline
+that is not part of this repository.
 
 ## Build & run
 
@@ -43,15 +48,3 @@ git config core.hooksPath .githooks
 ```
 
 Bypass in a pinch with `git commit --no-verify`.
-
-## Regenerating the dataset
-
-```sh
-cd pipeline
-python -m venv ../.venv && ../.venv/bin/pip install -r requirements.txt
-../.venv/bin/python fetch_problem_list.py
-../.venv/bin/python fetch_problems.py
-# author/update out/core_ideas.json, then:
-../.venv/bin/python summarize.py
-cp out/dataset.json ../App/Resources/dataset.json
-```

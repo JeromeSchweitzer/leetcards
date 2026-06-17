@@ -16,7 +16,7 @@ let package = Package(
         .executableTarget(
             name: "LeetCards",
             path: "App",
-            resources: [.process("Resources/dataset.json")],
+            resources: [.process("Resources")],
             swiftSettings: [.define("SWIFTPM")]
         ),
         .testTarget(

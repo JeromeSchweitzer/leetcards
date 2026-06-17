@@ -92,12 +92,14 @@ struct DatasetLoaderTests {
         }
     }
 
-    @Test("The bundled dataset.json loads and is non-trivial")
+    @Test("The bundled dataset loads (full dataset.json or sample) and is well-formed")
     func bundledDatasetLoads() throws {
-        // Skips gracefully if the resource isn't reachable in this build context.
-        guard Bundle.datasetBundle.url(forResource: "dataset", withExtension: "json") != nil else { return }
+        // Skips gracefully if no bundled dataset is reachable in this build context.
+        let reachable = Bundle.datasetBundle.url(forResource: "dataset", withExtension: "json") != nil
+            || Bundle.datasetBundle.url(forResource: "dataset.sample", withExtension: "json") != nil
+        guard reachable else { return }
         let dataset = try DatasetLoader().load()
-        #expect(dataset.problems.count > 100)
+        #expect(dataset.problems.count >= 1)
         #expect(dataset.problems.allSatisfy { !$0.coreIdea.isEmpty })
     }
 }

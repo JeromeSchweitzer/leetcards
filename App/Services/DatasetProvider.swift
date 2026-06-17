@@ -10,21 +10,33 @@ protocol DatasetProvider: Sendable {
     func loadData() throws -> Data
 }
 
-/// Reads `dataset.json` from the app bundle.
+/// Reads the bundled dataset, trying each candidate resource name in order.
+///
+/// The full `dataset.json` is gitignored (it bundles only when present locally);
+/// the committed `dataset.sample.json` is the public fallback so a fresh clone
+/// still builds and runs.
 struct BundledDatasetSource: DatasetProvider {
-    let resourceName: String
+    let resourceNames: [String]
     let bundle: Bundle
 
-    init(resourceName: String = "dataset", bundle: Bundle = .datasetBundle) {
-        self.resourceName = resourceName
+    init(resourceNames: [String] = ["dataset", "dataset.sample"], bundle: Bundle = .datasetBundle) {
+        self.resourceNames = resourceNames
+        self.bundle = bundle
+    }
+
+    /// Single-name convenience (used by tests).
+    init(resourceName: String, bundle: Bundle = .datasetBundle) {
+        self.resourceNames = [resourceName]
         self.bundle = bundle
     }
 
     func loadData() throws -> Data {
-        guard let url = bundle.url(forResource: resourceName, withExtension: "json") else {
-            throw DatasetError.missingResource(resourceName)
+        for name in resourceNames {
+            if let url = bundle.url(forResource: name, withExtension: "json") {
+                return try Data(contentsOf: url)
+            }
         }
-        return try Data(contentsOf: url)
+        throw DatasetError.missingResource(resourceNames.joined(separator: " / "))
     }
 }
 
