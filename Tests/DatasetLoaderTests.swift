@@ -16,14 +16,14 @@ struct DatasetLoaderTests {
         let json = """
         {
           "version": 1,
-          "generated_at": "2026-06-04T00:00:00Z",
+          "generated_at": "2026-01-01T00:00:00Z",
           "source": "sample",
           "problems": [
             {
-              "id": "example-problem", "number": 1, "order": 0, "title": "Example Problem",
-              "difficulty": "Easy", "description": "desc", "core_idea": "hash map",
+              "id": "sum-a-list", "number": 1, "order": 0, "title": "Sum a List",
+              "difficulty": "Easy", "description": "desc", "core_idea": "running total",
               "tags": ["array"], "hints": ["h"],
-              "leetcode_url": "https://example.com/problems/example-problem/",
+              "leetcode_url": "https://example.com/problems/sum-a-list/",
               "solutions": [{"title": "x", "language": "python", "code": "print(1)"}]
             }
           ]
@@ -33,7 +33,7 @@ struct DatasetLoaderTests {
         #expect(dataset.version == 1)
         #expect(dataset.problems.count == 1)
         let p = try #require(dataset.problems.first)
-        #expect(p.id == "example-problem")
+        #expect(p.id == "sum-a-list")
         #expect(p.difficulty == .easy)
         #expect(p.solutions.first?.language == "python")
     }
