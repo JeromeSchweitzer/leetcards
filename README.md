@@ -1,50 +1,43 @@
+> [!Note] Although this project was 100% vibe-coded, everything is this README was written manually by Jerome Schweitzer :)
+
 # LeetCards
 
-A flashcard app for drilling the **high-level idea** behind LeetCode problems
-(Top Interview 150). Show a problem → type the core idea → an on-device LLM
-(Apple Foundation Models) grades it 0–100 → override the score if you disagree.
-Tab between real community solutions while reviewing.
+Proof-of-concept for using Claude Code to develop a Swift project for reviewing the high-level ideas behind competive programming problems.
 
-## Layout
+## Development Process w/ AI Tools
 
-- `App/` — SwiftUI app, macOS + iOS. Models, services (dataset loading,
-  grading), stores (`DeckStore`, `FlashcardModel`), views, and theme.
-- `Tests/` — swift-testing regression suites.
+### Tool Specs
 
-## Dataset
+| Agentic System | Model    | IDE                            |
+|----------------|----------|--------------------------------|
+| Claude Code    | Opus 4.8 | VSCode (w/ Claude Code extension) |
 
-The app ships a small, self-authored **`App/Resources/dataset.sample.json`** so it
-builds and runs out of the box. The loader prefers a full `dataset.json` when one
-is present in `App/Resources/` (gitignored), and otherwise falls back to the
-sample. Building a full problem set is done by a separate, unpublished pipeline
-that is not part of this repository.
+### Project Plan
+Below are project details I gave AI on deliverables, expectations, testing, and verification.
 
-## Build & run
+#### Executive Description
+A flashcards app to enforce core ideas to competitive programming problems scraped from a third party. Modern design, problem-set selection using filters and tags, dataset customizability, solution review.
+#### Requirements
+* The app should run on both Mac and iPhone.
+* There should be a local database of competitive programming questions.
+* Updating the dataset with new problems should be trivial.
+* The user should be able to manually and richly select a problem set for each session of flashcards.
+* Local AI should evaluate user answers to establish a baseline score.
+* The user should be able to manually override the AI answer score.
+* The app should have more than one color themes.
+* Answer cards should cite and present multiple community solutions to programming problems.
+* The UI should render markdown syntax that exists in the dataset.
+* A "Summary" page should siaply when the user compeltes a problem set.
+* Problem selection page should display tags.
+* Problem selection page should display previous attempt information.
+* Problem selection page should display relevant meta-data for each problem.
 
-Two build systems compile the same `App/` + `Tests/` sources:
+### Verification Plan
 
-```sh
-# SwiftPM — macOS target + tests (terminal workflow)
-swift build
-swift test
-swift run            # launches the macOS app
+> [!Warning] Rough draft as of June 26 2026
+* Mainly manual (me) testing and verification (avoiding Claude screensharing permissions for now)
+* Bake regression tests into a precommit task
+* After each milestone or significant changes, run regression tests
 
-# Xcode — iOS + macOS, app bundle, Simulator
-xcodegen generate    # regenerate LeetCards.xcodeproj from project.yml
-open LeetCards.xcodeproj
-```
+## Results
 
-Requires full Xcode (for the SwiftData / FoundationModels macro plugins),
-macOS/iOS 26 SDK. On-device grading needs an Apple-Intelligence-capable device;
-otherwise the app falls back to a manual/mock grader.
-
-## Tests run on every commit
-
-A pre-commit hook builds and runs the suite, blocking the commit on failure.
-Enable it once per clone:
-
-```sh
-git config core.hooksPath .githooks
-```
-
-Bypass in a pinch with `git commit --no-verify`.
